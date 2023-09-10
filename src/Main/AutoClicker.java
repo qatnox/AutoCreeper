@@ -13,19 +13,18 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 
 
-
-public class Main extends JFrame implements ACEvents, UI {
+public class AutoClicker extends JFrame implements ACEvents, UI {
 
     private static JLabel status;
     private static JTextArea logger;
     private static JLabel notify;
     private static JScrollPane loggerScroll;
-    private static JButton start;
-    private static JButton stop;
+    private static volatile JButton start;
+    private static volatile JButton stop;
     private static JLabel labelSpeed;
     private static JTextField speedClick;
     private static final Border blackline = BorderFactory.createLineBorder(Color.black);
-    private static Integer speed = 0;
+    private static volatile Integer speed = 0;
     private static ThClick threadClicker;
     private static final SimpleDateFormat formatter = new SimpleDateFormat("HH:mm:ss");
 
@@ -34,19 +33,18 @@ public class Main extends JFrame implements ACEvents, UI {
         threadClicker = new ThClick();
 
         try {
-            speed = Integer.parseInt(speedClick.getText());
-
+            speed = (int) (Double.parseDouble(speedClick.getText()) * 1000);
         } catch (NumberFormatException nme){
             Date dateClick = new Date();
             logger.append("["+ formatter.format(dateClick) + "] " + "Incorrect speed is entered!\n");
         }
 
-        if(speed == 0 ){
-            speedClick.setText("5000");
+        if(speed == 0){
+            speedClick.setText("5");
 
             Date dateDefault = new Date();
             logger.append("["+ formatter.format(dateDefault) + "] " +
-                    "Default speed set to 5000ms!\n" +
+                    "Default speed set to 5 seconds!\n" +
                     "======================================\n");
         }
 
@@ -54,10 +52,10 @@ public class Main extends JFrame implements ACEvents, UI {
             if (speed > 0) {
                 threadClicker.start();
                 Date dateSpeedEnt = new Date();
-                logger.append("["+ formatter.format(dateSpeedEnt) + "] " + "The speed set to " + speed + "ms" + "\n");
+                logger.append("["+ formatter.format(dateSpeedEnt) + "] " + "The speed set to " + Double.parseDouble(speedClick.getText()) + " seconds" + "\n");
                 if (!threadClicker.isInterrupted()) {
                     Date dateStart = new Date();
-                    logger.append("[" + formatter.format(dateStart) + "] " + "Started working!\n");
+                    logger.append("[" + formatter.format(dateStart) + "] " + "Started working\n");
                 }
             }
         }
@@ -67,7 +65,7 @@ public class Main extends JFrame implements ACEvents, UI {
         try {
             threadClicker.interrupt();
         } catch (Exception ex) {
-            logger.append("AutoCreeper is currently stopped!\n");
+            logger.append("AutoCreeper is already stopped!\n");
         }
 
         status.setText("AutoCreeper IS STOPPED!");
@@ -76,13 +74,13 @@ public class Main extends JFrame implements ACEvents, UI {
     }
 
     public static class ThClick extends Thread {
-
         @Override
         public void run() {
 
             stop.setEnabled(true);
             start.setEnabled(false);
             status.setText("AutoCreeper IS ACTIVE!");
+            status.setForeground(Color.green);
             Robot robot;
             try {
                 robot = new Robot();
@@ -97,17 +95,18 @@ public class Main extends JFrame implements ACEvents, UI {
                     sleep(speed);
                 } catch (InterruptedException ex) {
                     Date date = new Date();
-                    logger.append("["+ formatter.format(date) + "] " + "Stopped working!" +
+                    logger.append("["+ formatter.format(date) + "] " + "Stopped working" +
                             "\n" +
                             "======================================\n");
                     Thread.currentThread().interrupt();
                 }
             }
             status.setText("AutoCreeper IS STOPPED!");
+            status.setForeground(Color.red);
         }
     }
 
-    public Main() {
+    public AutoClicker() {
         configGUI();
         initMainGUI();
         setColors();
@@ -117,17 +116,17 @@ public class Main extends JFrame implements ACEvents, UI {
     public void createStatus(){
         status = new JLabel("AutoCreeper IS STOPPED!");
         status.setHorizontalTextPosition(SwingConstants.CENTER);
-        status.setHorizontalTextPosition(SwingConstants.CENTER);
+        status.setVerticalTextPosition(SwingConstants.CENTER);
         status.setFont(new Font("Century Gothic", Font.BOLD, 20));
         status.setBounds(50, 115, 250, 50);
     }
 
     public void createLabelSpeed() {
-        labelSpeed = new JLabel("Enter the speed of clicks (in ms)");
-        labelSpeed.setBounds(55, 160, 250, 70);
+        labelSpeed = new JLabel("Enter the speed of clicks (in sec)");
+        labelSpeed.setBounds(50, 160, 250, 70);
 
         labelSpeed.setHorizontalTextPosition(SwingConstants.CENTER);
-        labelSpeed.setHorizontalTextPosition(SwingConstants.CENTER);
+        labelSpeed.setVerticalTextPosition(SwingConstants.CENTER);
         labelSpeed.setFont(new Font("Century Gothic", Font.PLAIN, 15));
     }
 
@@ -141,6 +140,7 @@ public class Main extends JFrame implements ACEvents, UI {
         start = new JButton("START");
         start.setBounds(30, 250, 120, 40);
         start.setFont(new Font("Century Gothic", Font.BOLD, 15));
+        start.setFocusable(false);
 
         start.setBorder(new RoundedBorder(10));
         start.setBorderPainted(true);
@@ -153,6 +153,7 @@ public class Main extends JFrame implements ACEvents, UI {
         stop = new JButton("STOP");
         stop.setBounds(180, 250, 120, 40);
         stop.setFont(new Font("Century Gothic", Font.BOLD, 15));
+        stop.setFocusable(false);
 
         stop.setBorder(new RoundedBorder(10));
         stop.setBorderPainted(true);
@@ -194,20 +195,18 @@ public class Main extends JFrame implements ACEvents, UI {
 
     @Override
     public void setColors(){
-        speedClick.setBackground(Color.lightGray);
+        speedClick.setBackground(Color.white);
         logger.setBackground(Color.darkGray);
-        start.setBackground(Color.green.darker());
-        stop.setBackground(Color.red.darker());
-
-        getContentPane().setBackground(Color.darkGray);
-        getContentPane().setBackground(Color.darkGray);
 
         labelSpeed.setForeground(Color.white);
         status.setForeground(Color.white);
         logger.setForeground(Color.white);
-        notify.setForeground(Color.RED);
+        notify.setForeground(Color.red);
         start.setForeground(Color.white);
         stop.setForeground(Color.white);
+
+        getContentPane().setBackground(Color.darkGray);
+        getContentPane().setBackground(Color.darkGray);
     }
 
     @Override
@@ -224,8 +223,9 @@ public class Main extends JFrame implements ACEvents, UI {
 
     @Override
     public void initMainGUI(){
+
         setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
-        setBounds(10, 10, 350, 350);
+        setSize(350, 350);
         setResizable(false);
         getContentPane().setLayout(null);
         setLocationRelativeTo(null);
@@ -235,7 +235,4 @@ public class Main extends JFrame implements ACEvents, UI {
         setIconImage(ico.getImage());
     }
 
-    public static void main(String[] args) {
-        SwingUtilities.invokeLater(Main::new);
-    }
 }
