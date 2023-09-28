@@ -9,6 +9,6 @@ public class Start {
             UIManager.setLookAndFeel("com.sun.java.swing.plaf.windows.WindowsLookAndFeel");
         } catch(Exception ignored){}
 
-        AutoClicker autoClicker = new AutoClicker();
+        InitAC autoClicker = new InitAC();
     }
 }

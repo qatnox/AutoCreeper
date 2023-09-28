@@ -27,7 +27,8 @@ public class AutoClicker extends JFrame implements ACEvents, UI {
     private static volatile Integer speed = 0;
     private static ThClick threadClicker;
     private static final SimpleDateFormat formatter = new SimpleDateFormat("HH:mm:ss");
-
+    static final Object lock = new Object();
+    private final float version = 1.1f;
     @Override
     public void start(ActionEvent e) {
         threadClicker = new ThClick();
@@ -74,6 +75,7 @@ public class AutoClicker extends JFrame implements ACEvents, UI {
     }
 
     public static class ThClick extends Thread {
+
         @Override
         public void run() {
 
@@ -82,6 +84,7 @@ public class AutoClicker extends JFrame implements ACEvents, UI {
             status.setText("AutoCreeper IS ACTIVE!");
             status.setForeground(Color.green);
             Robot robot;
+
             try {
                 robot = new Robot();
             } catch (AWTException ex) {
@@ -92,7 +95,9 @@ public class AutoClicker extends JFrame implements ACEvents, UI {
                 robot.mouseRelease(InputEvent.BUTTON1_DOWN_MASK);
 
                 try {
-                    sleep(speed);
+                    synchronized (lock) {
+                        lock.wait(speed);
+                    }
                 } catch (InterruptedException ex) {
                     Date date = new Date();
                     logger.append("["+ formatter.format(date) + "] " + "Stopped working" +
@@ -104,13 +109,6 @@ public class AutoClicker extends JFrame implements ACEvents, UI {
             status.setText("AutoCreeper IS STOPPED!");
             status.setForeground(Color.red);
         }
-    }
-
-    public AutoClicker() {
-        configGUI();
-        initMainGUI();
-        setColors();
-        addComponents();
     }
 
     public void createStatus(){
@@ -165,12 +163,13 @@ public class AutoClicker extends JFrame implements ACEvents, UI {
     public void createSpeedClick(){
         speedClick = new JTextField();
         speedClick.setBounds(130, 165, 70, 20);
+        speedClick.setFont(new Font("Century Gothic", Font.PLAIN, 15));
         speedClick.setBorder(blackline);
     }
 
     public void createLogger(){
         logger = new JTextArea();
-        logger.append("- - - - - - - - - - [AutoCreeper] - v. 1.1 - - - - - - - - - -\n");
+        logger.append("- - - - - - - - - - [AutoCreeper] - v. " + version + " - - - - - - - - - -\n");
         logger.setEditable(false);
         logger.setFont(new Font("Century Gothic", Font.PLAIN, 12));
     }
